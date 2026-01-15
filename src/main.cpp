@@ -1,5 +1,6 @@
 #include "tinyexpr.h"
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Vertex.hpp>
 #include <iostream>
 #include <string>
 
@@ -21,7 +22,7 @@ void drawGrid(sf::RenderWindow& window) {
     std::array y_axis =
     {
       sf::Vertex{sf::Vector2f(WIDTH / 2.0f, 0)},
-      sf::Vertex{sf::Vector2f(WIDTH / 2.0f, WIDTH)},
+      sf::Vertex{sf::Vector2f(WIDTH / 2.0f, HEIGHT)},
     };
 
     window.draw(x_axis.data(), x_axis.size(), sf::PrimitiveType::Lines);
@@ -29,20 +30,28 @@ void drawGrid(sf::RenderWindow& window) {
 }
 
 void testExpr(sf::RenderWindow &window) {
-
+  sf::VertexArray functionPlot(sf::PrimitiveType::Points);
 
   if (expr != nullptr) {
-    for (double i = -WIDTH; i < WIDTH; i += 0.01) {
+    for (double i = -WIDTH / 2.0f; i < WIDTH / 2.0f; i += 0.0001) {
       x = i;
+
       const double h1 = te_eval(expr);
-      sf::CircleShape shape(1.f);
-      shape.setFillColor(sf::Color(100, 250, 50));
-      shape.setPosition({WIDTH / 2.0f + static_cast<float>(10 * x), HEIGHT / 2.0f - static_cast<float>(10 * h1)});
-      window.draw(shape);
+
+      float screen_x = WIDTH / 2.0f + static_cast<float>(10 * x);
+      float screen_y = HEIGHT / 2.0f - static_cast<float>(10 * h1);
+
+      functionPlot.append(sf::Vertex{
+          {screen_x, screen_y},
+          sf::Color(100, 250, 50)
+          });
+
     }
   } else {
     printf("Parse error at %d\n", err);
   }
+
+  window.draw(functionPlot);
 }
 
 int main()
