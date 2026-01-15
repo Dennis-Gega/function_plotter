@@ -3,41 +3,43 @@
 #include <iostream>
 #include <string>
 
-void drawGrid(float width, float height, sf::RenderWindow& window) {
+#define WIDTH 500
+#define HEIGHT 500
+
+te_expr *expr;
+double x;
+te_variable vars[] = {{"x", &x}};
+int err;
+
+void drawGrid(sf::RenderWindow& window) {
     std::array x_axis =
     {
-      sf::Vertex{sf::Vector2f(0, height / 2.0f)},
-      sf::Vertex{sf::Vector2f(width, height / 2.0f)},
+      sf::Vertex{sf::Vector2f(0, HEIGHT / 2.0f)},
+      sf::Vertex{sf::Vector2f(WIDTH, HEIGHT / 2.0f)},
     };
 
     std::array y_axis =
     {
-      sf::Vertex{sf::Vector2f(width / 2.0f, 0)},
-      sf::Vertex{sf::Vector2f(width / 2.0f, width)},
+      sf::Vertex{sf::Vector2f(WIDTH / 2.0f, 0)},
+      sf::Vertex{sf::Vector2f(WIDTH / 2.0f, WIDTH)},
     };
 
     window.draw(x_axis.data(), x_axis.size(), sf::PrimitiveType::Lines);
     window.draw(y_axis.data(), y_axis.size(), sf::PrimitiveType::Lines);
 }
 
-void testExpr(std::string s,float width, float height, sf::RenderWindow &window) {
-  double x;
-  te_variable vars[] = {{"x", &x}};
+void testExpr(sf::RenderWindow &window) {
 
-  int err;
 
-  te_expr *expr = te_compile(s.c_str(), vars, 1, &err);
-
-  if (expr) {
-    for (double i = -width; i < width; i += 0.01) {
+  if (expr != nullptr) {
+    for (double i = -WIDTH; i < WIDTH; i += 0.01) {
       x = i;
       const double h1 = te_eval(expr);
       sf::CircleShape shape(1.f);
       shape.setFillColor(sf::Color(100, 250, 50));
-      shape.setPosition({width / 2.0f + static_cast<float>(10 * x), height / 2.0f - static_cast<float>(10 * h1)});
+      shape.setPosition({WIDTH / 2.0f + static_cast<float>(10 * x), HEIGHT / 2.0f - static_cast<float>(10 * h1)});
       window.draw(shape);
     }
-    te_free(expr);
   } else {
     printf("Parse error at %d\n", err);
   }
@@ -45,9 +47,14 @@ void testExpr(std::string s,float width, float height, sf::RenderWindow &window)
 
 int main()
 {
+  // process user input
   std::string s;
   std::getline(std::cin, s);
-  auto window = sf::RenderWindow(sf::VideoMode({1000u, 1000u}), "function plotter");
+
+  expr = te_compile(s.c_str(), vars, 1, &err);
+
+
+  auto window = sf::RenderWindow(sf::VideoMode({WIDTH, HEIGHT}), "function plotter");
   window.setFramerateLimit(144);
 
   sf::Vector2u size = window.getSize();
@@ -65,8 +72,10 @@ int main()
     }
 
     window.clear();
-    drawGrid(width, height, window);
-    testExpr(s, width, height, window);
+    drawGrid(window);
+    testExpr(window);
     window.display();
+
   }
+  te_free(expr);
 }
